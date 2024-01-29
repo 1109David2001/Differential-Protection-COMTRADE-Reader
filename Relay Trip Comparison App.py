@@ -154,18 +154,18 @@ class Difftest:
             if not self.data_array1 or not self.data_array2:
                 raise ValueError("Data arrays are empty or not set")
 
-            self.log_to_file(f"data_array1: {self.data_array1}")
-            self.log_to_file(f"data_array2: {self.data_array2}")
+            #self.log_to_file(f"data_array1: {self.data_array1}")
+            #self.log_to_file(f"data_array2: {self.data_array2}") #for debug,show data in txt file 
 
             Ip_values = [item for sublist in self.data_array1 for item in sublist]
             Is_values = [item for sublist in self.data_array2 for item in sublist]
 
-            self.log_to_file(f"Ip_values: {Ip_values}")
-            self.log_to_file(f"Is_values: {Is_values}")
+            '''self.log_to_file(f"Ip_values: {Ip_values}")
+            self.log_to_file(f"Is_values: {Is_values}")'''
 
             ibias_calculator = Ibiascal()
-            ibias_calculator.Ip = Ip_values
-            ibias_calculator.Is = Is_values
+            ibias_calculator.Ip = self.calculate_rms_values(Ip_values)
+            ibias_calculator.Is = self.calculate_rms_values(Is_values)
 
     
             print(f"Selected Ibias calculation method: {self.method}")
@@ -209,8 +209,8 @@ class Difftest:
             #self.log_to_file(f"data_array2: {self.data_array2}")
 
             for i in range(3):
-                Ip_sublist = self.data_array1[i]
-                Is_sublist = self.data_array2[i]
+                Ip_sublist = self.calculate_rms_values(self.data_array1[i])
+                Is_sublist = self.calculate_rms_values(self.data_array2[i])
                 self.log_to_file(f"Processing sublist {i}: Ip_sublist = {Ip_sublist}, Is_sublist = {Is_sublist}")
 
                 Idiff_sublist = [ip - is_value for ip, is_value in zip(Ip_sublist, Is_sublist)]
@@ -222,7 +222,14 @@ class Difftest:
             messagebox.showinfo("Success", "Idiff saved successfully.")
         else:
             print("Error: Not enough sublists to calculate Idiff")
+    def calculate_rms_values(self,data_list):
+        def calculate_rms(values):
+            squared_values = np.square(values)
+            mean_of_squares = np.mean(squared_values)
+            rms_value = np.sqrt(mean_of_squares)
+            return rms_value
 
+        return np.array([calculate_rms(data_list[:i+1]) for i in range(len(data_list))])
     def plot_datas(self):
         # Destroy the previous Tkinter window
         for widget in self.plot_canvas.winfo_children():
@@ -563,7 +570,7 @@ class Difftest:
                 tree.insert(parent, 'end', text=key, values=(value,))
 
     def load_file(self):
-        self.file_path = filedialog.askopenfilename(filetypes=[("RIO files", "*.rio"), ("All files", "*.*")])
+        self.file_path = filedialog.askopenfilename(filetypes=[("RIO files", "*.rio"), ("All files", "*.*")])#load RIO format
         if self.file_path:
             try:
                 with open(self.file_path, 'r') as file:
